@@ -84,6 +84,87 @@ func TestModify(t *testing.T) {
 				}
 			}`,
 		},
+		"add a nested string attribute, with a missing object": {
+			input: `{
+				"name": "Perceval"
+			}`,
+			modifications: []JsonModification{
+				Set("manager.name", "Arthur"),
+			},
+			expectedOutput: `{
+				"name": "Perceval",
+				"manager": {
+					"name": "Arthur"
+				}
+			}`,
+		},
+		"add a deeply nested string attribute, with missing array and object": {
+			input: `{
+				"name": "Perceval"
+			}`,
+			modifications: []JsonModification{
+				Set("manager.titles[0].fr", "Suzerain"),
+			},
+			expectedOutput: `{
+				"name": "Perceval",
+				"manager": {
+					"titles": [
+						{ "fr": "Suzerain" }
+					]
+				}
+			}`,
+		},
+		"add a deeply nested element at the end of an array": {
+			input: `{
+				"name": "Perceval",
+				"manager": {
+					"titles": [
+						{ "fr": "Suzerain" }
+					]
+				}
+			}`,
+			modifications: []JsonModification{
+				Set("manager.titles[1]", json.RawMessage(`{ "fr": "Le Sanglier de Cornouailles" }`)),
+			},
+			expectedOutput: `{
+				"name": "Perceval",
+				"manager": {
+					"titles": [
+						{ "fr": "Suzerain" },
+						{ "fr": "Le Sanglier de Cornouailles" }
+					]
+				}
+			}`,
+		},
+		"set element in the middle of array": {
+			input: `{
+				"knights": [
+					{ "name": "Lancelot" },
+					{ "name": "Karadoc" }
+				]
+			}`,
+			modifications: []JsonModification{
+				Set("knights[1].name", "Perceval"),
+			},
+			expectedOutput: `{
+				"knights": [
+					{ "name": "Lancelot" },
+					{ "name": "Perceval" }
+				]
+			}`,
+		},
+		"trying to set an element in an array with an out-of-bounds index": {
+			input: `{
+				"knights": [
+					{ "name": "Lancelot" },
+					{ "name": "Karadoc" }
+				]
+			}`,
+			modifications: []JsonModification{
+				Set("knights[3].name", "Perceval"),
+			},
+			expectedError: errors.New("out of bounds insertion index"),
+		},
 		"remove a nested attribute": {
 			input: `{
 				"name": "Perceval",
@@ -279,6 +360,20 @@ func TestModify(t *testing.T) {
 			input: `{}`,
 			modifications: []JsonModification{
 				Remove("[0]"),
+			},
+			expectedError: errors.New("cannot address content of JSON object by index"),
+		},
+		"wrongfully address content of json array by attribute when setting": {
+			input: `[]`,
+			modifications: []JsonModification{
+				Set("knight", 1),
+			},
+			expectedError: errors.New("cannot address content of JSON array by attribute"),
+		},
+		"wrongfully address content of json object by index when setting": {
+			input: `{}`,
+			modifications: []JsonModification{
+				Set("[0]", 1),
 			},
 			expectedError: errors.New("cannot address content of JSON object by index"),
 		},
