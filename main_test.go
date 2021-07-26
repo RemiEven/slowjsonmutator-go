@@ -9,7 +9,7 @@ import (
 func TestModify(t *testing.T) {
 	tests := map[string]struct {
 		input          string
-		modifications  []JsonModification
+		modifications  []JSONModification
 		expectedOutput string
 		expectedError  error
 	}{
@@ -19,7 +19,7 @@ func TestModify(t *testing.T) {
 		},
 		"remove one first level string attribute": {
 			input: `{"name": "Perceval"}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("name"),
 			},
 			expectedOutput: `{}`,
@@ -31,7 +31,7 @@ func TestModify(t *testing.T) {
 					"name": "Arthur"
 				}
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("manager"),
 			},
 			expectedOutput: `{"name": "Perceval"}`,
@@ -43,7 +43,7 @@ func TestModify(t *testing.T) {
 				"questsAchieved": 0,
 				"title": "Knight"
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("name"),
 				Remove("aka"),
 				Remove("questsAchieved"),
@@ -52,7 +52,7 @@ func TestModify(t *testing.T) {
 		},
 		"add a first level string attribute": {
 			input: `{"name": "Perceval"}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("surname", "de Galles"),
 			},
 			expectedOutput: `{
@@ -62,7 +62,7 @@ func TestModify(t *testing.T) {
 		},
 		"add a first level number attribute": {
 			input: `{"name": "Perceval"}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("questsAchieved", 0),
 			},
 			expectedOutput: `{
@@ -72,7 +72,7 @@ func TestModify(t *testing.T) {
 		},
 		"add a first level object attribute": {
 			input: `{"name": "Perceval"}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("manager", json.RawMessage(`{
 					"name": "Arthur"
 				}`)),
@@ -88,7 +88,7 @@ func TestModify(t *testing.T) {
 			input: `{
 				"name": "Perceval"
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("manager.name", "Arthur"),
 			},
 			expectedOutput: `{
@@ -102,7 +102,7 @@ func TestModify(t *testing.T) {
 			input: `{
 				"name": "Perceval"
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("manager.titles[0].fr", "Suzerain"),
 			},
 			expectedOutput: `{
@@ -123,7 +123,7 @@ func TestModify(t *testing.T) {
 					]
 				}
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("manager.titles[1]", json.RawMessage(`{ "fr": "Le Sanglier de Cornouailles" }`)),
 			},
 			expectedOutput: `{
@@ -143,7 +143,7 @@ func TestModify(t *testing.T) {
 					{ "name": "Karadoc" }
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("knights[1].name", "Perceval"),
 			},
 			expectedOutput: `{
@@ -160,7 +160,7 @@ func TestModify(t *testing.T) {
 					{ "name": "Karadoc" }
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("knights[3].name", "Perceval"),
 			},
 			expectedError: errors.New("out of bounds insertion index"),
@@ -172,7 +172,7 @@ func TestModify(t *testing.T) {
 					"name": "Arthur"
 				}
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("manager.name"),
 			},
 			expectedOutput: `{
@@ -190,7 +190,7 @@ func TestModify(t *testing.T) {
 					}
 				}
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("manager.home.type"),
 			},
 			expectedOutput: `{
@@ -203,7 +203,7 @@ func TestModify(t *testing.T) {
 		},
 		"remove an attribute that is already not there": {
 			input: `{"name": "Perceval"}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("manager.home.type"),
 			},
 			expectedOutput: `{"name": "Perceval"}`,
@@ -213,7 +213,7 @@ func TestModify(t *testing.T) {
 				"name": "Perceval",
 				"manager": null
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("manager.home.type"),
 			},
 			expectedOutput: `{
@@ -223,7 +223,7 @@ func TestModify(t *testing.T) {
 		},
 		"remove an attribute with an invalid path (middle segment is not an object)": {
 			input: `{"name": "Perceval"}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("name.complete"),
 			},
 			expectedError: errors.New("invalid path"),
@@ -234,7 +234,7 @@ func TestModify(t *testing.T) {
 		},
 		"set a cyclic structure so that marshalling fails": {
 			input: `{}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("attr", func() interface{} {
 					type dummyStructWithCycle struct {
 						Attr *dummyStructWithCycle
@@ -256,7 +256,7 @@ func TestModify(t *testing.T) {
 					}
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("knights[0].name"),
 			},
 			expectedOutput: `{
@@ -273,7 +273,7 @@ func TestModify(t *testing.T) {
 					{ "name": "Perceval" }
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("knights[2]"),
 			},
 			expectedOutput: `{
@@ -290,7 +290,7 @@ func TestModify(t *testing.T) {
 					{ "name": "Karadoc" }
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("knights[1]"),
 			},
 			expectedOutput: `{
@@ -308,7 +308,7 @@ func TestModify(t *testing.T) {
 					{ "name": "Karadoc" }
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("knights[2]"),
 			},
 			expectedOutput: `{
@@ -325,7 +325,7 @@ func TestModify(t *testing.T) {
 					{ "name": "Perceval" }
 				]
 			}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("knights[2]"),
 			},
 			expectedOutput: `{
@@ -341,7 +341,7 @@ func TestModify(t *testing.T) {
 				{ "name": "Perceval" },
 				{ "name": "Karadoc" }
 			]`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("[1]"),
 			},
 			expectedOutput: `[
@@ -351,28 +351,28 @@ func TestModify(t *testing.T) {
 		},
 		"wrongfully address content of json array by attribute when removing": {
 			input: `[]`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("knight"),
 			},
 			expectedError: errors.New("cannot address content of JSON array by attribute"),
 		},
 		"wrongfully address content of json object by index when removing": {
 			input: `{}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Remove("[0]"),
 			},
 			expectedError: errors.New("cannot address content of JSON object by index"),
 		},
 		"wrongfully address content of json array by attribute when setting": {
 			input: `[]`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("knight", 1),
 			},
 			expectedError: errors.New("cannot address content of JSON array by attribute"),
 		},
 		"wrongfully address content of json object by index when setting": {
 			input: `{}`,
-			modifications: []JsonModification{
+			modifications: []JSONModification{
 				Set("[0]", 1),
 			},
 			expectedError: errors.New("cannot address content of JSON object by index"),
@@ -490,7 +490,7 @@ func TestParseJsonPath(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			segments, err := parseJsonPath(test.inputPath)
+			segments, err := parseJSONPath(test.inputPath)
 			if !ErrorEqual(err, test.expectedError) {
 				t.Errorf("unexpected error: wanted [%v], got [%v]", test.expectedError, err)
 			}

@@ -9,11 +9,13 @@ import (
 	"strings"
 )
 
-type JsonModification func(interface{}) (interface{}, error)
+// JSONModification is a function that can modify parsed untyped json data
+type JSONModification func(interface{}) (interface{}, error)
 
-func Remove(path string) JsonModification {
+// Remove removes the element at the given path
+func Remove(path string) JSONModification {
 	return func(toModify interface{}) (interface{}, error) {
-		pathSegments, err := parseJsonPath(path)
+		pathSegments, err := parseJSONPath(path)
 		if err != nil {
 			return nil, err
 		}
@@ -54,12 +56,12 @@ func remove(toModify interface{}, parsedPath []jsonPathSegment) (interface{}, er
 			return toModify, nil
 		}
 
-		if modifiedDeeper, err := remove(deeper, parsedPath[1:]); err != nil {
+		modifiedDeeper, err := remove(deeper, parsedPath[1:])
+		if err != nil {
 			return nil, err
-		} else {
-			toModify[*parsedPath[0].attribute] = modifiedDeeper
-			return toModify, nil
 		}
+		toModify[*parsedPath[0].attribute] = modifiedDeeper
+		return toModify, nil
 	case []interface{}:
 		if parsedPath[0].index == nil {
 			return nil, errors.New("cannot address content of JSON array by attribute")
@@ -74,12 +76,12 @@ func remove(toModify interface{}, parsedPath []jsonPathSegment) (interface{}, er
 		}
 
 		deeper := toModify[index]
-		if modifiedDeeper, err := remove(deeper, parsedPath[1:]); err != nil {
+		modifiedDeeper, err := remove(deeper, parsedPath[1:])
+		if err != nil {
 			return nil, err
-		} else {
-			toModify[index] = modifiedDeeper
-			return toModify, nil
 		}
+		toModify[index] = modifiedDeeper
+		return toModify, nil
 	case nil:
 		return toModify, nil
 	default:
@@ -98,9 +100,10 @@ func removeFromSlice(slice []interface{}, index int) []interface{} {
 	}
 }
 
-func Set(path string, value interface{}) JsonModification {
+// Set sets the element at the given path to value
+func Set(path string, value interface{}) JSONModification {
 	return func(toModify interface{}) (interface{}, error) {
-		pathSegments, err := parseJsonPath(path)
+		pathSegments, err := parseJSONPath(path)
 		if err != nil {
 			return nil, err
 		}
@@ -119,11 +122,11 @@ func set(toModify interface{}, parsedPath []jsonPathSegment, value interface{}) 
 		}
 
 		deeper := toModify[*parsedPath[0].attribute]
-		if modifiedDeeper, err := set(deeper, parsedPath[1:], value); err != nil {
+		modifiedDeeper, err := set(deeper, parsedPath[1:], value)
+		if err != nil {
 			return nil, err
-		} else {
-			toModify[*parsedPath[0].attribute] = modifiedDeeper
 		}
+		toModify[*parsedPath[0].attribute] = modifiedDeeper
 
 		return toModify, nil
 	case []interface{}:
@@ -160,7 +163,8 @@ func set(toModify interface{}, parsedPath []jsonPathSegment, value interface{}) 
 	}
 }
 
-func Modify(input string, modifications ...JsonModification) (string, error) {
+// Modify applies modifications to a json string
+func Modify(input string, modifications ...JSONModification) (string, error) {
 	var untypedParsed interface{}
 	if err := json.Unmarshal([]byte(input), &untypedParsed); err != nil {
 		return "", err
@@ -180,10 +184,10 @@ func Modify(input string, modifications ...JsonModification) (string, error) {
 	return string(result), err
 }
 
-var naiveJsonPathRegexp = regexp.MustCompile(`^(?:[a-zA-Z0-9_\-]+|\[[0-9]+\])(?:(?:\.[a-zA-Z0-9_\-]+)|\[[0-9]+\])*$`)
+var naiveJSONPathRegexp = regexp.MustCompile(`^(?:[a-zA-Z0-9_\-]+|\[[0-9]+\])(?:(?:\.[a-zA-Z0-9_\-]+)|\[[0-9]+\])*$`)
 
-func parseJsonPath(path string) ([]jsonPathSegment, error) {
-	if !naiveJsonPathRegexp.Match([]byte(path)) {
+func parseJSONPath(path string) ([]jsonPathSegment, error) {
+	if !naiveJSONPathRegexp.Match([]byte(path)) {
 		return nil, fmt.Errorf("cannot parse json path [%q], it doesn't seem valid", path)
 	}
 
