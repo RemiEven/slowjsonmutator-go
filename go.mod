@@ -1,4 +1,4 @@
-module github.com/RemiEven/slowjsonmutator
+module github.com/remieven/slowjsonmutator-go
 
 go 1.16
 
