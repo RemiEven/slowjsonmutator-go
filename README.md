@@ -35,3 +35,7 @@ output, _ := sjm.Modify(input, sjm.Set("manager.titles[0].fr", "Suzerain"))
 fmt.Println(output)
 // {"manager":{"titles":[{"fr":"Suzerain"}]},"name":"Perceval"}
 ```
+
+## License
+
+MIT licensed. See the LICENSE file for details.
