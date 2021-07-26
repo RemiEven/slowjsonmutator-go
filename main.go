@@ -184,6 +184,16 @@ func Modify(input string, modifications ...JSONModification) (string, error) {
 	return string(result), err
 }
 
+// ModifyOrPanic calls Modify and panic if it returns an error.
+// This should not be used outside of tests, but that applies for the whole library.
+func ModifyOrPanic(input string, modifications ...JSONModification) string {
+	output, err := Modify(input, modifications...)
+	if err != nil {
+		panic(err)
+	}
+	return output
+}
+
 var naiveJSONPathRegexp = regexp.MustCompile(`^(?:[a-zA-Z0-9_\-]+|\[[0-9]+\])(?:(?:\.[a-zA-Z0-9_\-]+)|\[[0-9]+\])*$`)
 
 func parseJSONPath(path string) ([]jsonPathSegment, error) {
