@@ -1,5 +1,7 @@
 # slowjsonmutator-go
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/remieven/slowjsonmutator-go.svg)](https://pkg.go.dev/github.com/remieven/slowjsonmutator-go)
+
 This is a small library in Go that can change (possibly deeply nested) JSON data without needing you to write a go struct.
 Under the hood it deals with `map[string]interface{}`, `[]interface{}` and type casting, so it is quite slow.
 It is mainly intended to be used in tests and to help with reducing boilerplate.
